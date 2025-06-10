@@ -1,81 +1,66 @@
 import streamlit as st
 import pandas as pd
-import json
-import os
 import time
+import random
+import os
 
-st.set_page_config(
-    page_title="DULCi Live Dashboard",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# Page config
+st.set_page_config(page_title="DULCi AI Dashboard", layout="wide")
+st.title("🤖 DULCi - Autonomous Trading Intelligence Dashboard")
 
-st.title("📡 DULCi Live Trading Dashboard")
+# Section: Live Logs
+st.subheader("📜 Live Logs")
+log_placeholder = st.empty()
 
-# --- SYSTEM MODE ---
-mode_placeholder = st.empty()
+# Section: Training Status
+st.subheader("📊 Model Training Monitor")
+train_col1, train_col2 = st.columns(2)
+train_progress = train_col1.progress(0)
+train_status = train_col2.empty()
 
-# --- STATUS COLUMNS ---
-col1, col2, col3 = st.columns(3)
+# Section: Profit Chart (Dummy Data)
+st.subheader("📈 Portfolio Growth")
+chart_placeholder = st.line_chart(pd.DataFrame(columns=['Profit'], index=range(60)))
 
-with col1:
-    st.subheader("🔍 Coin Hunter")
-    if os.path.exists("runtime/coinhunter_status.json"):
-        with open("runtime/coinhunter_status.json") as f:
-            data = json.load(f)
-            st.markdown(f"**Hot Pair:** `{data.get('pair', '-')}`")
-            st.markdown(f"**Confidence:** `{data.get('confidence', '-')}`")
-            st.markdown(f"**Signal Reason:** `{data.get('reason', '-')}`")
-    else:
-        st.warning("No data yet.")
+# Section: System Health
+st.subheader("🖥️ System Health Monitor")
+sys_col1, sys_col2 = st.columns(2)
+sys_health = sys_col1.empty()
+sys_cpu = sys_col2.empty()
 
-with col2:
-    st.subheader("📈 Price Predictor")
-    if os.path.exists("runtime/price_prediction.json"):
-        with open("runtime/price_prediction.json") as f:
-            data = json.load(f)
-            st.markdown(f"**Next Move:** `{data.get('direction', '-')}`")
-            st.markdown(f"**Target Price:** `{data.get('price', '-')}`")
-            st.markdown(f"**Model Accuracy:** `{data.get('accuracy', '-')}`")
-    else:
-        st.warning("No prediction data.")
+# Section: Trade Alert (Simulation)
+st.subheader("🚨 Live Trade Alerts")
+alert_box = st.empty()
 
-with col3:
-    st.subheader("🤖 Execution Engine")
-    if os.path.exists("runtime/execution_status.json"):
-        with open("runtime/execution_status.json") as f:
-            data = json.load(f)
-            st.markdown(f"**Running Mode:** `{data.get('mode', '-')}`")
-            st.markdown(f"**Trade Status:** `{data.get('status', '-')}`")
-            st.markdown(f"**Last Action:** `{data.get('last_action', '-')}`")
-    else:
-        st.warning("No executor updates.")
+# Dummy log generation
+def generate_logs():
+    return f"[INFO] Model checkpoint saved at {time.strftime('%H:%M:%S')}"
 
-# --- PORTFOLIO OVERVIEW ---
-st.subheader("📊 Portfolio Tracker")
-if os.path.exists("runtime/portfolio.csv"):
-    df = pd.read_csv("runtime/portfolio.csv")
-    st.dataframe(df, use_container_width=True)
-else:
-    st.info("Portfolio data will appear here.")
+def generate_trade_alert():
+    return random.choice([
+        "[BUY] Entering LONG on BTC/USDT (x10)",
+        "[SELL] Closing SHORT on ETH/USDT (x5)",
+        "[HOLD] No clear entry for BNB/USDT"
+    ])
 
-# --- LOG READER ---
-st.subheader("📁 Live Logs")
-log_option = st.selectbox("Select log type", ["trading", "coinhunter", "predictor", "errors"])
-log_path = f"logs/{log_option}.log"
+# Looping simulator
+data = []
+for i in range(60):
+    log_placeholder.text(generate_logs())
+    train_progress.progress(i + 1)
+    train_status.text(f"Epoch {i+1}/60 - Accuracy: {round(random.uniform(70, 99), 2)}%")
+    data.append(random.uniform(0.1, 2.5) + (data[-1] if data else 1000))
+    chart_placeholder.line_chart(pd.DataFrame({'Profit': data[-30:]}, index=list(range(len(data[-30:])))))
+    sys_health.markdown(f"**Disk**: OK\n**RAM**: OK\n**Net**: Stable")
+    sys_cpu.text(f"CPU Usage: {random.randint(12, 87)}%  |  GPU Temp: {random.randint(30, 70)}°C")
+    if i % 10 == 0:
+        alert_box.markdown(f"**{generate_trade_alert()}**")
+    time.sleep(1)
 
-if os.path.exists(log_path):
-    with open(log_path, "r") as f:
-        logs = f.readlines()[-100:]
-        st.text("".join(logs))
-else:
-    st.info("No logs available for this section.")
+st.success("✅ DULCi System Dashboard Live")
 
-# --- LIVE REFRESH ---
-st.markdown("---")
-st.caption("Refreshing every 5 seconds...")
-st_autorefresh = st.experimental_rerun
-
-# Add delay manually to allow this run to complete
-# After deployment with `streamlit run`, use Streamlit's built-in auto-refresh
-# or tmux/systemd for runtime persistence
+# Optional: Telegram webhook interface (mock)
+with st.expander("🔧 Telegram Alert Setup"):
+    st.text_input("Enter your Telegram Bot Token")
+    st.text_input("Enter your Chat ID")
+    st.button("Test Webhook")
